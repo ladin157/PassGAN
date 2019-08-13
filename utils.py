@@ -2,8 +2,10 @@ import collections
 import numpy as np
 import re
 
+
 def tokenize_string(sample):
     return tuple(sample.lower().split(' '))
+
 
 class NgramLanguageModel(object):
     def __init__(self, n, samples, tokenize=False):
@@ -24,8 +26,8 @@ class NgramLanguageModel(object):
     def ngrams(self):
         n = self._n
         for sample in self._samples:
-            for i in xrange(len(sample)-n+1):
-                yield sample[i:i+n]
+            for i in range(len(sample) - n + 1):
+                yield sample[i:i + n]
 
     def unique_ngrams(self):
         return set(self._ngram_counts.keys())
@@ -52,10 +54,10 @@ class NgramLanguageModel(object):
             p_i = np.exp(p.log_likelihood(ngram))
             q_i = np.exp(self.log_likelihood(ngram))
             p_dot_q += p_i * q_i
-            p_norm += p_i**2
+            p_norm += p_i ** 2
         for ngram in self.unique_ngrams():
             q_i = np.exp(self.log_likelihood(ngram))
-            q_norm += q_i**2
+            q_norm += q_i ** 2
         return p_dot_q / (np.sqrt(p_norm) * np.sqrt(q_norm))
 
     def precision_wrt(self, p):
@@ -83,10 +85,10 @@ class NgramLanguageModel(object):
         log_m = np.logaddexp(log_p - np.log(2), log_q - np.log(2))
         kl_q_m = np.sum(np.exp(log_q) * (log_q - log_m))
 
-        return 0.5*(kl_p_m + kl_q_m) / np.log(2)
+        return 0.5 * (kl_p_m + kl_q_m) / np.log(2)
+
 
 def load_dataset(path, max_length, tokenize=False, max_vocab_size=2048):
-    
     lines = []
 
     with open(path, 'r') as f:
@@ -99,20 +101,20 @@ def load_dataset(path, max_length, tokenize=False, max_vocab_size=2048):
 
             if len(line) > max_length:
                 line = line[:max_length]
-                continue # don't include this sample, its too long
+                continue  # don't include this sample, its too long
 
             # right pad with ` character
-            lines.append(line + ( ("`",)*(max_length-len(line)) ) )
+            lines.append(line + (("`",) * (max_length - len(line))))
 
     np.random.shuffle(lines)
 
     import collections
     counts = collections.Counter(char for line in lines for char in line)
 
-    charmap = {'unk':0}
+    charmap = {'unk': 0}
     inv_charmap = ['unk']
 
-    for char,count in counts.most_common(max_vocab_size-1):
+    for char, count in counts.most_common(max_vocab_size - 1):
         if char not in charmap:
             charmap[char] = len(inv_charmap)
             inv_charmap.append(char)
@@ -130,5 +132,6 @@ def load_dataset(path, max_length, tokenize=False, max_vocab_size=2048):
     # for i in xrange(100):
     #     print filtered_lines[i]
 
-    print "loaded {} lines in dataset".format(len(lines))
+    print
+    "loaded {} lines in dataset".format(len(lines))
     return filtered_lines, charmap, inv_charmap

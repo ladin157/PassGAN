@@ -11,6 +11,7 @@ import tflib.ops.conv1d
 import utils
 import models
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
@@ -39,19 +40,19 @@ def parse_args():
                         default=64,
                         dest='batch_size',
                         help='Batch size (default: 64).')
-    
+
     parser.add_argument('--seq-length', '-l',
                         type=int,
                         default=10,
                         dest='seq_length',
                         help='The maximum password length. Use the same value that you did for training. (default: 10)')
-    
+
     parser.add_argument('--layer-dim', '-d',
                         type=int,
                         default=128,
                         dest='layer_dim',
                         help='The hidden layer dimensionality for the generator. Use the same value that you did for training (default: 128)')
-    
+
     args = parser.parse_args()
 
     if not os.path.isdir(args.input_dir):
@@ -61,12 +62,17 @@ def parse_args():
         parser.error('"{}.meta" file doesn\'t exist'.format(args.checkpoint))
 
     if not os.path.exists(os.path.join(args.input_dir, 'charmap.pickle')):
-        parser.error('charmap.pickle doesn\'t exist in {}, are you sure that directory is a trained model directory'.format(args.input_dir))
+        parser.error(
+            'charmap.pickle doesn\'t exist in {}, are you sure that directory is a trained model directory'.format(
+                args.input_dir))
 
     if not os.path.exists(os.path.join(args.input_dir, 'inv_charmap.pickle')):
-        parser.error('inv_charmap.pickle doesn\'t exist in {}, are you sure that directory is a trained model directory'.format(args.input_dir))
+        parser.error(
+            'inv_charmap.pickle doesn\'t exist in {}, are you sure that directory is a trained model directory'.format(
+                args.input_dir))
 
     return args
+
 
 args = parse_args()
 
@@ -79,7 +85,6 @@ with open(os.path.join(args.input_dir, 'inv_charmap.pickle'), 'rb') as f:
 fake_inputs = models.Generator(args.batch_size, args.seq_length, args.layer_dim, len(charmap))
 
 with tf.Session() as session:
-
     def generate_samples():
         samples = session.run(fake_inputs)
         samples = np.argmax(samples, axis=2)
@@ -91,11 +96,13 @@ with tf.Session() as session:
             decoded_samples.append(tuple(decoded))
         return decoded_samples
 
+
     def save(samples):
         with open(args.output, 'a') as f:
-                for s in samples:
-                    s = "".join(s).replace('`', '')
-                    f.write(s + "\n")
+            for s in samples:
+                s = "".join(s).replace('`', '')
+                f.write(s + "\n")
+
 
     saver = tf.train.Saver()
     saver.restore(session, args.checkpoint)
@@ -104,17 +111,17 @@ with tf.Session() as session:
     then = time.time()
     start = time.time()
     for i in xrange(int(args.num_samples / args.batch_size)):
-        
+
         samples.extend(generate_samples())
 
         # append to output file every 1000 batches
-        if i % 1000 == 0 and i > 0: 
-            
+        if i % 1000 == 0 and i > 0:
             save(samples)
-            samples = [] # flush
+            samples = []  # flush
 
-            print('wrote {} samples to {} in {:.2f} seconds. {} total.'.format(1000 * args.batch_size, args.output, time.time() - then, i * args.batch_size))
+            print('wrote {} samples to {} in {:.2f} seconds. {} total.'.format(1000 * args.batch_size, args.output,
+                                                                               time.time() - then, i * args.batch_size))
             then = time.time()
-    
+
     save(samples)
     print('finished in {:.2f} seconds'.format(time.time() - start))

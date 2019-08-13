@@ -4,7 +4,9 @@ Image grid saver, based on color_grid_vis from github.com/Newmu
 
 import numpy as np
 import scipy.misc
-from scipy.misc import imsave
+# from scipy.misc import imsave
+from matplotlib.pyplot import imsave
+
 
 def save_images(X, save_path):
     # [0, 1] -> [0,255]
